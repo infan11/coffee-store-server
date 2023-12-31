@@ -1,8 +1,8 @@
 const express = require('express');
+const app = express()
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const app = express()
 const port = process.env.PORT || 5000;
 
 //middle Were
@@ -27,8 +27,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+  
   const CoffeeCollection = client.db('coffeeDB').collection('coffee')
+  const userCollection = client.db('coffeeDB').collection('user')
   
   app.get('/coffee' , async(req , res) => {
     const cursor = CoffeeCollection.find()
@@ -36,13 +37,42 @@ async function run() {
     res.send(result);
   })
 
-     app.post('/coffee/add', async(req , res)=>{
+     app.post('/coffee/:add', async(req , res)=>{
         const newCoffee = req.body;
         console.log(newCoffee)
         const result = await CoffeeCollection.insertOne(newCoffee)
         res.send(result);
      })
+     app.put('/coffee/:id', async(req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const options = { upsert: true };
+      const updatedCoffee = req.body;
 
+      const coffee = {
+          $set: {
+              name: updatedCoffee.name, 
+              quantity: updatedCoffee.quantity, 
+              supplier: updatedCoffee.supplier, 
+              taste: updatedCoffee.taste, 
+              category: updatedCoffee.category, 
+              details: updatedCoffee.details, 
+              photo: updatedCoffee.photo
+          }
+      }
+
+      const result = await CoffeeCollection.updateOne(filter, coffee, options);
+      res.send(result);
+  })
+
+  // user related apis
+
+  get.post('/user ' , async(req, res ) => {
+    const user = req.body;
+    console.log(user)
+    const result = await userCollection.insertOne(user)
+    req.send(result)
+  })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
